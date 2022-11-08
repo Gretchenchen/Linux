@@ -1,0 +1,139 @@
+#!/bin/bash 
+# menu system script, version 1
+# This program will allow us to print out a list of users,
+# list the user groups, add a new user, create a welcome file for a user
+
+# lab09
+# guoqin chen  041044191  chen0884@algonquinlive.com
+
+umask 022
+
+function pause() {
+
+    echo 
+    read -p 'Press enter to continue'
+}
+
+
+clear
+./shapes.sh l 60
+
+read name < <(whoami);
+read username <  <(grep $name /etc/passwd | cut -d':' -f 5 | cut -d',' -f 1)
+echo "Hello ${username^^}"
+echo "Welcome to the System Administration menu"
+echo
+./shapes.sh L 60
+echo "Note that there are administrative functions that will ask for an administrator password."
+./shapes.sh l 60
+echo
+
+choice=Start
+
+while [[ ${choice::1} != 'Q' ]]
+do
+
+# Display menu
+
+    echo 'Enter your choice:'
+    echo '(P)rint out a list of users'
+    echo '(L)ist the user groups'
+    echo '(A)dd a new user'
+    echo '(C)reate a welcome file for a user'
+    echo '(Q)uit the menu'
+
+    read choice
+    choice=${choice^^}
+
+    echo
+    ./shapes.sh l 60
+    echo
+
+
+case ${choice::1} in 
+
+        Q)  echo "Have a great day! $username" ;;
+
+        P)  echo "Actual Users of the System"
+            echo
+            # same result, but does not meet the requirements
+            # awk -F: '($3>=1000)&&($1!="nobody"){print $1}' /etc/passwd
+            # grep min UID limit 
+            min=$(grep -iw UID_MIN /etc/login.defs)
+            # grep max UID limit 
+            max=$(grep -iw UID_MAX /etc/login.defs)
+            # print result if UID >= $MIN and UID <= $MAX, get the first field of /etc/passwd  
+            awk -F':' -v "min=${min##UID_MIN}" -v "max=${max##UID_MAX}" '{ if ( $3 >= min && $3 <= max ) print $0}' /etc/passwd | cut -d: -f1 
+            echo
+            ./shapes.sh l 60
+            echo
+            pause
+            ;;
+
+
+        # list user groups of the system, add an asterisk in front of other groups(except for personal groups)
+        L)  echo "User Groups of the System"
+            echo 'An * indicates the group is not a personal group'
+            echo
+            # validUser=$(cut -d: -f1 /etc/passwd)
+            # validGroup=$(cut -d: -f1 /etc/group)
+            # awk -F: '{if ($1 ~/'${USER}'/) print $1 " group";else if ($3>=1000 && $3<60000 && validUser=validGroup) print $1 " group"}; else(print "*"$1 " group")'  
+            # awk -F: '{if ($1 ~/'${USER}'/) print $1 " group";else if ($3>=1000 && $3<60000) print "*"$1 " group"}' /etc/group
+            read min < <(grep -iw UID_MIN /etc/login.defs | cut -d" " -f2)
+            read max < <(grep -iw UID_MAX /etc/login.defs | cut -d" " -f2)
+            max=$(echo $max | cut -d " " -f 2)                      
+
+            while read -a lsline
+            do
+                if (( lsline >=$min &&lsline<$max ));then
+               
+                read group< <(grep $lsline /etc/group | cut -d: -f1)
+                
+                read user< <(grep $lsline /etc/passwd | cut -d: -f1)
+                    if [[ "$user" != "$group" ]];then
+                        echo " *$group  group"
+                    else
+                        echo " $group group"
+                    fi
+                fi
+            user=""
+            done < <(cat /etc/group | cut -d: -f3)
+            echo
+            ./shapes.sh l 60
+            echo
+            pause
+            ;;
+
+        # add a new user named freddy
+        A)  
+            read -p "Enter the username: " username
+            sudo adduser $username
+            echo "$username is created"
+            echo
+            ./shapes.sh l 60
+            echo
+            pause
+            ;;
+
+        #create a welcome file for a user
+        C)  read -p "enter a targetname: " targetname
+            sudo sh -c  "echo 'welcome to the system $targetname.' > /home/"$targetname"/welcome.txt"
+            echo
+            ./shapes.sh l 60
+            echo
+            pause
+            ;;  
+     
+
+
+esac
+done
+
+
+
+
+
+
+
+
+

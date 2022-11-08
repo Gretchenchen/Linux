@@ -1,0 +1,70 @@
+
+#!/bin/bash 
+# Code organizing script, version1
+# this script will generate some shapes
+# guoqin chen 041044191 chen0884@algonquinlive.com
+umask 022
+
+
+#declare a global variable,default shape *
+
+value="*"
+
+
+#define a function, print a line each time
+
+function printShape() {
+    
+    for (( j=0; j<$1;j++ )) do
+    echo -n "$value";
+    done
+    echo ""
+}
+
+
+#determine the number of arguments
+#if there are 3 arguments, change the variable value,then print shapes respectively
+#if there are 2 arguments, print shapes respectively
+
+if [ "$#" -eq 2 ] || [ "$#" -eq 3 ]; then
+	if [ "$#" -eq 3 ]; then
+		value="$3"
+		#echo $3
+	fi
+
+#print line
+
+    case "$1" in 
+    'line' | 'l' )   
+         printShape $2        
+    ;;
+    
+#print square
+
+    'square' | 's' )
+    for ((i=0;i<$2;i++)) do
+        printShape $2;
+    done;;
+
+#print triangle
+
+    'triangle' | 't')
+    for ((i=1;i<=$2;i++)) do
+        printShape $i; 
+            
+    done;;
+
+    esac
+
+#print error message
+
+
+else
+    echo "Please enter 2 or 3 arguments" 1>&2
+
+exit 1
+
+
+fi
+
+
